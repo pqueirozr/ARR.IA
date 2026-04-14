@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARR.IA — Ajuda para Reabilitação e Resiliência de Inteligência Artifícial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f8f5;
+    --panel: #ffffff;
+    --border: #c5d7ce;
+    --border-bright: #9fb8ac;
+    --accent: #007a53;
+    --accent-dim: #005d40;
+    --warn: #9a6b00;
+    --danger: #c62828;
+    --safe: #008f5f;
+    --text: #19362c;
+    --text-dim: #537064;
+    --text-bright: #10241d;
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Barlow Condensed', sans-serif;
+    --body: 'Barlow', sans-serif;
+    --scan-speed: 4s;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* CRT scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 122, 83, 0.02) 2px,
+      rgba(0, 122, 83, 0.02) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(16, 36, 29, 0.12) 100%);
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 48px;
+    background: #edf5f1;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .gov-logo {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .topbar-sep { width: 1px; height: 20px; background: var(--border); }
+
+  .topbar-title {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--safe);
+    box-shadow: 0 0 8px var(--safe);
+    animation: pulse-dot 2s ease-in-out infinite;
+    margin-right: 5px;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── ALERT BANNER ── */
+  .alert-banner {
+    background: var(--danger);
+    color: #fff;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 7px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .alert-banner::before {
+    content: '';
+    position: absolute;
+    left: -100%;
+    top: 0; bottom: 0;
+    width: 60%;
+    background: rgba(255,255,255,0.12);
+    animation: sweep 3s linear infinite;
+  }
+
+  @keyframes sweep {
+    to { left: 200%; }
+  }
+
+  .ticker-wrap {
+    overflow: hidden;
+    background: #f6faf8;
+    border-bottom: 1px solid var(--border);
+    padding: 6px 0;
+  }
+
+  .ticker {
+    display: inline-block;
+    white-space: nowrap;
+    animation: ticker 40s linear infinite;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--warn);
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(100vw); }
+    to { transform: translateX(-100%); }
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: grid;
+    grid-template-columns: 260px 1fr 220px;
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    min-height: calc(100vh - 48px - 28px - 22px);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .sidebar-section {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .status-item:last-child { border-bottom: none; }
+
+  .status-val {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .val-ok { color: var(--safe); border: 1px solid rgba(0,143,95,0.25); background: rgba(0,143,95,0.08); }
+  .val-warn { color: var(--warn); border: 1px solid rgba(154,107,0,0.25); background: rgba(154,107,0,0.08); }
+  .val-danger { color: var(--danger); border: 1px solid rgba(198,40,40,0.25); background: rgba(198,40,40,0.08); animation: blink-val 1.5s step-end infinite; }
+  .val-proc { color: var(--accent); border: 1px solid rgba(0,122,83,0.25); background: rgba(0,122,83,0.08); }
+
+  @keyframes blink-val {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: fill-loop 8s ease-in-out infinite;
+  }
+
+  @keyframes fill-loop {
+    0% { width: 12%; }
+    40% { width: 67%; }
+    60% { width: 67%; }
+    90% { width: 71%; }
+    100% { width: 12%; }
+  }
+
+  .ref-number {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ── CENTER ── */
+  .center-col {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+  }
+
+  /* ── HEADER PANEL ── */
+  .system-header {
+    padding: 32px 40px 28px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .system-title {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 42px;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    color: var(--text-bright);
+    margin-bottom: 6px;
+  }
+
+  .system-subtitle {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .system-meta {
+    position: absolute;
+    top: 32px; right: 40px;
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  .corner-decoration {
+    position: absolute;
+    bottom: 20px;
+    right: 40px;
+    width: 60px; height: 60px;
+    border-right: 1px solid var(--border-bright);
+    border-bottom: 1px solid var(--border-bright);
+    opacity: 0.5;
+  }
+
+  /* ── CHAT AREA ── */
+  .chat-area {
+    flex: 1;
+    padding: 24px 40px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 320px;
+    max-height: 420px;
+  }
+
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-track { background: transparent; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: msg-in 0.3s ease-out;
+  }
+
+  @keyframes msg-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .msg.user .msg-label { color: var(--text-dim); }
+  .msg.aria .msg-label { color: var(--accent); }
+
+  .msg-body {
+    padding: 12px 16px;
+    border-radius: 2px;
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 90%;
+  }
+
+  .msg.user .msg-body {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text);
+    align-self: flex-end;
+    border-radius: 2px 2px 0 2px;
+  }
+
+  .msg.aria .msg-body {
+    background: rgba(0,122,83,0.06);
+    border: 1px solid rgba(0,122,83,0.2);
+    color: var(--text-bright);
+    border-radius: 0 2px 2px 2px;
+    position: relative;
+  }
+
+  .msg.aria .msg-body::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  .procedure-box {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: rgba(154,107,0,0.08);
+    border: 1px solid rgba(154,107,0,0.25);
+    border-radius: 2px;
+  }
+
+  .procedure-box-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--warn);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .procedure-step {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    padding: 3px 0;
+    display: flex;
+    gap: 8px;
+  }
+
+  .step-num {
+    color: var(--warn);
+    min-width: 16px;
+  }
+
+  .case-id {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  /* typing indicator */
+  .typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(0,122,83,0.06);
+    border: 1px solid rgba(0,122,83,0.16);
+    border-radius: 0 2px 2px 2px;
+    width: fit-content;
+    min-width: 60px;
+  }
+
+  .typing-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: typing-bounce 1.2s ease-in-out infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes typing-bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── INPUT ── */
+  .input-area {
+    padding: 16px 40px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .quick-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .quick-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    background: transparent;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .quick-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,122,83,0.08);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+  }
+
+  .input-row:focus-within {
+    border-color: var(--accent);
+  }
+
+  .input-prefix {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    padding: 10px 12px;
+    background: rgba(0,122,83,0.08);
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    user-select: none;
+  }
+
+  #user-input {
+    flex: 1;
+    background: rgba(255,255,255,0.02);
+    border: none;
+    outline: none;
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 10px 14px;
+    resize: none;
+    height: 40px;
+    line-height: 20px;
+  }
+
+  #user-input::placeholder {
+    color: var(--text-dim);
+    opacity: 0.6;
+  }
+
+  .send-btn {
+    background: rgba(0,122,83,0.12);
+    border: none;
+    border-left: 1px solid var(--border);
+    color: var(--accent);
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    padding: 0 20px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .send-btn:hover {
+    background: rgba(0,122,83,0.2);
+  }
+
+  .disclaimer {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    opacity: 0.5;
+    line-height: 1.5;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .rp-section {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rp-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .resource-item {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+
+  .resource-name { color: var(--text); font-family: var(--body); }
+
+  .resource-status {
+    font-family: var(--mono);
+    font-size: 9px;
+  }
+
+  .rs-unavail { color: var(--danger); }
+  .rs-pending { color: var(--warn); }
+  .rs-limited { color: #aaa; }
+
+  .map-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .map-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,122,83,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,122,83,0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .leiria-outline {
+    position: absolute;
+    width: 70%;
+    height: 86%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    opacity: 0.9;
+  }
+
+  .leiria-outline path {
+    fill: rgba(0, 122, 83, 0.08);
+    stroke: rgba(0, 122, 83, 0.7);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    filter: drop-shadow(0 0 4px rgba(0, 122, 83, 0.25));
+  }
+
+  .map-point {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1px solid;
+  }
+
+  /* Pontos alinhados aproximadamente com municipios de Leiria */
+  .mp-r { background: rgba(198,40,40,0.35); border-color: var(--danger); top: 46%; left: 53%; animation: map-blink 1.8s ease-in-out infinite; } /* Leiria */
+  .mp-o { background: rgba(154,107,0,0.35); border-color: var(--warn); top: 78%; left: 38%; animation: map-blink 2.4s ease-in-out infinite; } /* Caldas da Rainha */
+  .mp-b { background: rgba(0,122,83,0.35); border-color: var(--accent); top: 26%; left: 61%; } /* Pombal */
+
+  @keyframes map-blink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(1.5); }
+  }
+
+  .map-overlay {
+    position: absolute;
+    bottom: 6px; left: 6px;
+    font-family: var(--mono);
+    font-size: 8px;
+    color: rgba(0,122,83,0.45);
+  }
+
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,122,83,0.35), transparent);
+    animation: scan var(--scan-speed) linear infinite;
+  }
+
+  @keyframes scan {
+    from { top: 0; }
+    to { top: 100%; }
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 24px;
+    border-top: 1px solid var(--border);
+    background: #edf5f1;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+  }
+
+  .footer-center { opacity: 0.5; letter-spacing: 0.1em; }
+
+  /* error flash */
+  .err-flash {
+    animation: err-flash-anim 0.1s;
+  }
+
+  @keyframes err-flash-anim {
+    50% { background: rgba(198,40,40,0.15); }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="gov-logo">⬡ ARR.IA</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-title">Ajuda para Reabilitação e Resiliência de Inteligência Artifícial — Plataforma de Operações de Emergência</div>
+  </div>
+  <div class="topbar-right">
+    <span><span class="status-dot"></span>SISTEMA OPERACIONAL</span>
+    <span id="clock">--:--:--</span>
+    <span>NODE: EOP-7 / CLUSTER-DELTA</span>
+  </div>
+</div>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner">
+  ⚠ &nbsp; DECLARAÇÃO DE EMERGÊNCIA ATIVA — SETORES 4 A 11 — TODOS OS CIDADÃOS DEVEM AGUARDAR INSTRUÇÕES OFICIAIS DA ARR.IA ANTES DE TOMAR QUALQUER AÇÃO &nbsp; ⚠
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <span class="ticker">
+    UNIDADE DE RESPOSTA ARR.IA MOBILIZADA — CAPACIDADE DE PROCESSAMENTO A 94% — FORMULÁRIOS DE PEDIDO DE DISTRIBUIÇÃO ALIMENTAR DISPONÍVEIS EM ARR.IA.GOV/PORTAL/FORM-7B — ACESSO A ÁGUA PENDENTE DE AUTORIZAÇÃO DA AUTORIDADE REGIONAL — ROTAS DE EVACUAÇÃO EM CÁLCULO — CONCLUSÃO ESTIMADA: 18–72 HORAS — PEDIDOS DE MATERIAL MÉDICO REQUEREM O FORMULÁRIO 12C E COMPROVATIVO DE RESIDÊNCIA — SISTEMA DE ALOCAÇÃO DE ABRIGO EM MANUTENÇÃO — PERMANEÇA NA SUA LOCALIZAÇÃO ATUAL — NÃO TENTE AUTO-EVACUAÇÃO — A ARR.IA ESTÁ A PROCESSAR AS SUAS NECESSIDADES — O SEU NÚMERO DE PEDIDO FOI REGISTADO — ALGUÉM ENTRARÁ EM CONTACTO — MANTENHA A CALMA E CUMPRA AS INSTRUÇÕES
+  </span>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Estado do Incidente</div>
+      <div class="status-item"><span>Nível de Alerta</span><span class="status-val val-danger">CRÍTICO</span></div>
+      <div class="status-item"><span>População Afetada</span><span class="status-val val-warn">84 200</span></div>
+      <div class="status-item"><span>Estado da Resposta</span><span class="status-val val-proc">EM PROCESSAMENTO</span></div>
+      <div class="status-item"><span>Recursos Mobilizados</span><span class="status-val val-ok">PENDENTE</span></div>
+      <div class="status-item"><span>ETA Primeiros Socorros</span><span class="status-val val-warn">DESCONHECIDO</span></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Carga do Sistema</div>
+      <div class="status-item"><span>Pedidos em Fila</span><span class="status-val val-warn">14 882</span></div>
+      <div class="status-item"><span>Tempo Médio de Resposta</span><span class="status-val val-danger">47 MIN</span></div>
+      <div class="status-item"><span>Formulários Submetidos</span><span class="status-val val-ok">3 204</span></div>
+      <div class="status-item"><span>Formulários Aprovados</span><span class="status-val val-danger">0</span></div>
+      <div style="margin-top:10px">
+        <div class="sidebar-label">Progresso do Processamento</div>
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+        <div class="ref-number">PROC-REF: 7700-DELTA-19A</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Conformidade do Cidadão</div>
+      <div class="status-item"><span>Taxa de Permanência</span><span class="status-val val-ok">78%</span></div>
+      <div class="status-item"><span>Auto-evacuação</span><span class="status-val val-danger">DESACONSELHADA</span></div>
+      <div class="status-item"><span>Apoio Não Autorizado</span><span class="status-val val-danger">SINALIZADO</span></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">O Seu Processo</div>
+      <div class="status-item"><span>ID do Processo</span><span class="status-val val-proc" id="case-id">GEN-0000</span></div>
+      <div class="status-item"><span>Classe de Prioridade</span><span class="status-val val-warn" id="priority-class">D</span></div>
+      <div class="status-item"><span>Formulários Necessários</span><span class="status-val val-danger" id="forms-req">3</span></div>
+      <div class="status-item"><span>Estado</span><span class="status-val val-proc">REGISTADO</span></div>
+    </div>
+
+  </div>
+
+  <!-- CENTER COLUMN -->
+  <div class="center-col">
+    <div class="system-header">
+      <div class="system-title">ARR.IA</div>
+      <div class="system-subtitle">Ajuda para Reabilitação e Resiliência de Inteligência Artifícial</div>
+      <div class="system-meta">
+        <div>PLATFORM v4.2.1-STABLE</div>
+        <div>SECTOR: URBAN-DELTA</div>
+        <div id="date-display">--/--/----</div>
+        <div>AUTORIZAÇÃO: CIVIL</div>
+      </div>
+      <div class="corner-decoration"></div>
+    </div>
+
+    <div class="chat-area" id="chat-area">
+      <div class="msg aria">
+        <div class="msg-label">SISTEMA DE EMERGÊNCIA ARR.IA</div>
+        <div class="msg-body">
+          Bem-vindo(a), Cidadão(ã). A sua ligação a este terminal foi registada e o seu processo foi inicializado (ver barra lateral).
+          <br><br>
+          A ARR.IA está aqui para ajudar a orientar a sua atuação durante a emergência. Descreva a sua situação e eu fornecerei orientação oficial e iniciarei os procedimentos de resposta adequados em seu nome.
+          <br><br>
+          <em>Nota: Todas as interações são registadas e podem ser usadas para avaliar a sua Classificação de Prioridade.</em>
+          <div class="case-id">PROCESSO INICIADO — ARR.IA-SESSÃO-<span id="session-id">7F8A2</span> — REGISTO DE INTERAÇÕES ATIVO</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="quickSend('Preciso de água e comida urgentemente')">Preciso de água / comida</button>
+        <button class="quick-btn" onclick="quickSend('Preciso de evacuar, é perigoso aqui')">Preciso de evacuar</button>
+        <button class="quick-btn" onclick="quickSend('Alguém aqui precisa de ajuda médica urgente')">Emergência médica</button>
+        <button class="quick-btn" onclick="quickSend('O que devo fazer agora?')">O que faço?</button>
+        <button class="quick-btn" onclick="quickSend('O sistema de formulários não está a funcionar')">Formulários não funcionam</button>
+        <button class="quick-btn" onclick="quickSend('A minha cave inundou, o que devo fazer?')">A cave inundou</button>
+      </div>
+      <div class="input-row">
+        <div class="input-prefix">›</div>
+        <input id="user-input" type="text" placeholder="Escreva o seu pedido de emergência..." maxlength="200" />
+        <button class="send-btn" onclick="sendMessage()">ENVIAR</button>
+      </div>
+      <div class="disclaimer">
+        Ao submeter um pedido, confirma que a informação fornecida é exata e que leu os Termos de Utilização da ARR.IA (Ref: GOV/ARR.IA/TOU-2024). Submissões não autorizadas ou fraudulentas podem resultar em rebaixamento da Classe de Prioridade. As respostas da ARR.IA são apenas informativas e não constituem garantia de prestação de serviço.
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <div class="rp-section">
+      <div class="rp-label">Mapa da Área</div>
+      <div class="map-placeholder">
+        <div class="map-grid"></div>
+        <svg class="leiria-outline" viewBox="0 0 777.12 679.84" preserveAspectRatio="xMidYMid meet" aria-label="Contorno geográfico da zona de Leiria" role="img">
+          <path d="M776.07,90.85c-3.23-6.08-9.92-14.99-14.98-19.97-.27-1.61-1.31-2.74-2-3.99-1.77-3.26-2.12-6.92-4.55-9.93-1.45-1.8-5.1-3.71-5.43-5.05,1.77-1.12.85-4.11,1-5.99,2.79-7.7.54-6.27.96-11.42.03-.36,1.48-2.1,2.04-5.56,1.62-.85.94-3.39,1-4.99.79-2.2,1.64-2.28,2-3,1.16-2.28,1.01-2.34,1-4.99,0-.96.23-3.66-.05-3.96-.28-.3-1.73.03-2.6,0-.12,0-.22-.04-.34-.04-7.13-1.61-13.17-13.22-18.26-11.85-4.59,1.24-6.69,10.56-9.73,14.32-2.22,2.75-5.66,4.11-7.4,7.58-.97,1.93,0,4.5-2.09,5.93-5.04-.43-11.53-11.15-14.91-11.1-7.44.1-5.58,8.71-12.54,11.1-2.64-.33-3.81-.14-5.99,1-5.55,2.9-6.66,10.1-8.99,14.98-1.2,2.52-.91,2.8-1,3-1.37,3-4.03,5.45-5.99,7.99-1.58-.71-3.04,1.83-3,3,.08,2.07,5.11,12.85,6.61,14.86,1.55,2.09,5.97,4.86,6.27,5.77,1.15,3.42-2.55,4.7-2.64,5.81-.18,2.31,4.44,3.43.75,9.04-.73,1.11-2.94,2.28-3,2.46-3.84-1.32-10.16-3.71-12.59-6.98-2.12-2.85.05-12.33-7.39-9-1.88.84-.82,5.77-1,7.99-.03.33.06.68,0,1-.97.79-3.68,1.94-4,3-.35,1.17.37,2.96-.52,4.95-1,2.23-5.03,3.77-5.28,4.19-.19.33,1.03,1.54-.08,3.35-1.97,3.21-9.14,7.85-12.13,10.95-.93.97-.91,2.96-1.98,4.01-1.59,1.56-6.23,1.84-7.98,3.51-1.37,1.3-1.14,2.29-1,3.99-1.89-.19-4.04.02-5.99,0-.33,0-.67,0-1,0h-5.99c-3.78-1.37-7.09-3.69-4.97-7.98,3.4-.07,5.04,2.73,6.96-1.01.94-1.83,2.21-4.23,0-5.99.06-1.07-.36-3.27.14-3.88.38-.47,1.55.04,1.86-.12,1.97.07,5.43.58,5.99-2,.65-2.98-9.55-16.57-11.99-19.97-.1-.96.15-2.08,0-3-.18-1.09-.96-2.44-1-3,3.57-1.59,1.8-5.31,1-7.99-.47-1.57-2.91-8.03-3.53-8.95-.96-1.42-3.09-1.33-4.51-2.76-2.01-2.02-6.2-9.4-6.95-12.26-3.35,2.16-6.31,3.88-5.94,8.44.06.77,2.51,6.52,2.87,6.92,1.06,1.18,2.87.42,3.09.63.22.2-.93,1.69-.93,2.53,0,1.32,3.26,3.87.4,4.45-4.19.85-7.39-7.54-9.82-9.64-.46-.4-8.33-4.72-8.63-4.35-.29.37.45,3.01-1.01,3.01-.12,0-.52-.89-.98-1.01l-.02,5.01c-3.4,5.23-11.76,7.46-15.51,10.96-1.66,1.55-2.3,4.83-3.45,5.55-2.24,1.4-5.44-.44-8.01-.53-2.9-.1-9.06-1.12-7.99,2-.33-.03-.68.06-1,0-.11-.02-.48-1.49-1.99-.99-.82,1.83.83,3.27.99,3.99.06.25,1.03.52.97,2.3-.23,6.54-4.96,20.94-12.99,21.19-1.69-3.94-4.49-5.21-5.96-9.51-.14-1.88.77-4.87-1-5.99.31-2.64,1.35-1.56,1.92-2.8.48-1.04.38-2.67,1.08-4.19.19-.16.35-.32.5-.48.9-.47,2.35-.29.5-2.52-1.09-1.31-1.69-.2-2-3,1.6-1.25,1.16-4.94,1-6.99-.31-4-1.69-2.28-2-4.99,1.49-3.47,1.87-14.33,0-16.98-.33-.47-3.75-2.94-4-3-1.66-1.78-5.49-.98-7.99-1-3.43-.02-8.37-.81-10.99,1-.77.17-6.57,5.74-5,7.47-.16.51-.52.55-.99.52-.15-.01-.53-.88-.98-1.01l-.02,5.01c-1.9,3.6-3.87,5.64-5.99,9.99-2.19.82-2.2,2.92-2,4.99-.24.33-.67.81-1,1,1.44-1.12-5.73-1.05-6.99-1-2.33.1-10.72,2.3-10.99-2,2.85.83,2.16-2.41,2-4.99-.15-2.38-.53-2.4-1-3.99-.24-.83-.88-3.84-1.05-3.97-.15-.11-1.61.92-3.62.26-.82-.27-8.84-5.2-9.38-5.73-1.1-1.09-.79-6.12-2.91-7.06-2.37-1.05-5.27.51-8.01.53-.53,0,0-.57-3,0-2.14.41-1.87-1.92-2.66-2.02-2.05-.27-11.35.73-13.32.02-.32-.12-.31-2.03-4-2-.96,0-2.26.95-3.51.86-.91-.06-15.71-6.31-16.47-6.85-.01-.02-.03-.04-.04-.06-.1-.34.97-1.63-1.43-2.01-4.8-.77-3.32,1.91-3.53,2.07-3.3,2.57-7.37,1.27-11.03,4.45-4.63,4.02-5.78,8.14-6.95,13.53l-3,2c-1.43-.33-2.05-.71-3-1-1.26-.38-2.86-.61-3.93-.79l-1.06-.21c-3.29-1.3-6.73-4.25-10.15-6.12-.8-.44-.91-1.72-1.55-1.85-4.61-.99-5.21,2.47-7.28,2.98-1.35-1.72-4.81-1-6.99-1-.27,0-.91.68-1.64.68-6.57.06-3.04-1.62-3.53-3.93-.09-.43-2.88-5.05-3.38-5.67-2.1-2.57-10.47-7.7-13.45-5.65-.89.61-1.33,3.32-1.97,4.59-1.28,2.56-1.13,2.76-2,4.99-5.8,14.87-9.53,29.88-14.98,44.94-2.59.92-1.74,3.04-2,4.99-1.97,14.75-9.26,22.04-13.98,35.95-.96,2.84-1.42,4.67-1,7.99-.96,3.88-2.84,8.33-4.29,12.18-6.11,16.16-13.39,32.22-18.68,48.73-.05-4.89-2.6.41,0,3-1.55,4.88-3.95,9.57-6.09,14.21-4.16,9.02-13.34,24.83-15.88,34.72-.04.1-.07.19-.11.29-.52,1.2-2.28,3.33.11,4.7-.43,3.94-3.17,10.81-4.68,14.76-2.17,5.69-4.72,9.67-5.58,15.39-.46,3.07-1.08,6.03-1.73,8.8-.11.3-.2.58-.28.86-.76,1.99-2.23,4.58,1.28,4.13-.02,3.02-4.77,9.78-5.99,12.98-1.05,2.74-.92,2.99-1,5.99-.27,10.72-4.4,18.26-8.62,27.31-2.25,4.82-2.35,6.66-3.36,11.64-2.74.9-1.88,3.74-2,5.99-.05.99,0,2,0,3-1.96,2.08-1.35,5.74,0,7.99,1.32,2.19,3.3,2.33,4.99,3.99.54,2.98-1.66,8.87,2,7.99-.41,5.18-1.7,1.8-4.58,4.91-1.14,1.23-1.42,3.23-2.46,4.56-12.12,15.5-22.85,32.84-34.91,48.46-.88,1.14-3.12,1.09-1,3.99-.22.67-.9,1.44-1,2-3.96-2.25-6.58,3.33-9.72,3.83-1.37.21-3.12-.94-3.26-.84-.24.17-.79,3.9-1.98,5.53-1.42,1.94-4.11,2.7-5.59,4.4-2.17,2.5-5,8.49-7.42,11.05l-3,3c-.38.25-2.45-.42-2.9.08-.24.27-.83,5.22-1.56,6.99-.61,1.51-4.14,10.46-4.54,10.91-.55.62-.95-.21-3,3-2.81,4.4-4.98,8.59-8.99,11.97,1.88,1.23,4.21-.07,5.36.07.34.04,4.5,3.56,4.81,3.69.67.29,1.77-.99,2.63-.62.1.04.33,1.28.91,1.88.56.56,2.17.78,2.26.99.26.62.11,2.67,1,4.99.21.54.69,1.13,1,2,.09,2.23-.74,4.34,1,5.99.71.68,2.28.61,3,1,.68.38,1.3.66,2,1-1.03,4.86-4.39,3.31-7.57,4.91-3.32,1.68-8.56,8.03-10.92,9.06-1.17.51-1.99-.3-1.48-1.48.73-1.67,6.48-6.27,6.98-8.5.6-2.66-1.41-1.61-3-3,8.99-1.97,1.66-2.83.48-4.97-.5-.9.56-1.91.52-2.02.53-2.28-.17-3.19-1-4.99-2.3-4.99-6.2-5.89-11.34-7.07-2.04,2.73-5.09,5.85-7.64,8.07l-.52-1c-2.04.15-3.32,1.99-3.48,4-8.49,7.56-31.53,29.66-42.44,29.97-3.04.09-5.14-.41-5.51-3-.09-.63.07-1.34,0-1.99-4.05-.73-1.52,3.87-1.06,5.61.02.13.04.24.07.38.04.92.13,2.15,0,3-2.57-.68-1.7,1.65-2,2-.15.18-3.05-.57-2,3-.92.56-1.96.76-3,1-.86-1.7-3.43-.83-4.99-1-2.11-.23-2.86-.11-4.99-1-.63-.91-.73-1.96-1-3-.6-2.35-.31-2.78-2-4.99-1.62-2.13-3.7-3.4-3,0,.14.69,1.48,2.34,1,2.99-.65.88-5.69.05-6.99,0-2.19-1.66-4.73-1.6-6.99,0-1.06.75-5.73,6.69-4.9,7.87.35.5,9.65,5.35,10.85,5.62,3.65.8,10.11-2.84,10.83-2.28.96.74,7.92,11.61,8.19,12.76-1.79,1.38-.91,4.78-1,6.99-.06,1.57-1.77,1.17,0,3.99.99,1.57,2.87,2.31,3.63,3.36,1.24,1.7,3.03,4.64,4.36,6.63-.79,2.46.56,4.19,1,5.99.2.81-.29,2.13.02,3.25.26.94,1.48,0,1.98,2.74.14.8-.22,2.81,0,3,.31.27,7.44.49,8-1,.38.08.76.94,1,1,.97.24,3.48,2.63,4.99,0,.4.12.76.94,1,1,1.67.44,3.42,1.79,5.99,1,3.68,2.18,2.27,9.14,7.63,1.65.85-1.19.61-3.01,1.31-3.94,2.62-3.52,6.7-5.76,9.04-8.7.95-1.19,1.81-2.42,2-3.99.32-.27,3.61-2.81,3.83-2.94,9.83-5.69,6.05-1.04,10.07,2.55,1.67,1.49,3.73,1.14,4.08,1.39.09.06-.43,1.71.68,2.01,1.2.33,3.81.04,5.31-.01,1.31-.05,3.3.51,4-1,2.49.36,6.1.66,7.99,1,1.3,2,3.81,2.12,5.99,2,.34.2,1.77-.6,2.05.62.35,1.57-.36,3.9.02,5.8.52,2.55,1.77,8.22,2.62,10.34.45,1.13,5.27,5.5,5.36,5.89.81,3.52-3.73,6.56-5.06,9.31-1.04,2.15-2.19,4.97,0,6.99-.29,1.3-1.22,1.4-2,2-.43.33-2.44.16-2.99,1.51-.85,2.1,1.87,1.35,1.99,1.48.17.19.9,4.18,1,4.99.03.23-1.71.02,0,3,1.37,2.38,4.63,3.78,5.99,5.99.24,1.49-.34,3.7,0,4.99.57,2.14,4,8.09,6.98,6.56,3.22-1.65,1.95-5.2,2.17-5.43,1.3-1.36,6.22-1.19,6.62-1.44,2.08-1.31,5.5-7.81,6.18-8.26,1.93-1.27,4.28,2.32,5.85,1.43.18-.1,2.73-2.89,2.82-3.08.31-.57-.3-2.18.72-3.78,2.7-4.22,5.8-6.39,7.6-10.97,1.03-2.61.62-2.88,1-4.99.18-.98,2.61-3.6,0-4.99,1.58-6.5,1.94-3.25,5.94-5.54,4.08-2.34,3.31-9.82,6.52-12.5,1.24-1.04,3.43-.25,4.72-.91,1.37-.7,1.56-3.19,4.04-4.27,1.85-.81,4.11-.47,5.73-1.27,2-.98,1.58-2.95,2.01-3.47.69-.83,1.86-1.54,3-3,.37-.47-.09-2.35,1.57-2.81.48-.13,5.84-.04,7.42-.19.23-.04.46-.07.7-.1h5.99c3.4,1.12,6.19,3.36,7.98,6.5,1.21,2.12,1.8,6.24,2.04,6.48.27.27,5.21-1.04,6.3-.71,2.23.68,1.52,3.04,5.19,1.87,1.62-.52,1.61-1.79,2.68-2.48,3.4-2.18,4.8-1.97,6.77-5.67.69-1.3,1.05-2.51,1-3.99.34-.76.58-1.97,1-3,1.46-3.6,2.55-4.51,0-6.99-3.18-3.08-4.45-3.05-5.99-7.99-.34-2.01.49-5.28,0-6.99-.91-3.19-1.78.13-1-6.99.21-1.92-.15-4.04,0-5.99.16-.32.77-.61,1-1,.94-1.61,2.17-3.51,0-4.99.16-.48,2-1.6,3-3.99.7-1.68,1.27-3.09,1-4.99,1.42-2.44,3.79-5.12,5.99-7.35.35-.36,1.79.19,2.5-.6,1.49-1.68.71-3.81,3.95-5.13.92-.37,6.11-.99,6.82-.88.92.15,1.37,1.87,1.73,1.98.52.16,5.2,1.02,5.48,1,2.15-.2.46-1.88.51-2,.7-1.4,1.9-2.57,2.36-4.21.54-1.94-.36-3.75.3-5.51.16-.42,3.82-4.42,4.33-5.26,1.01-1.63,2.13-3.52,0-4.99.39-2.91,1.51-1.58,2.32-3.22,3.2-6.48,7.15-13.52,9.72-19.46,1.21-2.8,1.57-7.72,2.16-9.07.11-.24,1.33-.19,1.44-.45.37-.89-.54-2.03,2.34-3.75,1.78,2.4,4.16.67,5.99,0,4.1-1.51,3.27-4.52,6.99-6.99,2.42.9,4.55-.72,5.99-1,3.78-.72,2.85-.46,5.99,0l-1,.99h4.99c.96.29,2.09.76,3,1.01,2.13.59,1.74,2.11,4.99,0,7.38-4.78,8.5-2.64,15.24-4.21,5.88-1.37,3.31-3.9,12.73-2.78,1.41,2.37,3.87,1.66,5.99,2,2.54.4,3.59-.04,4,0,4.04.44,5.03.93,7.99,2,2.68.97,2.95,2.04,5.99,0,6.43-4.31,3.13-.8,6.33-1.16.88-.1,2.17-1.85,2.66-1.84.27,0,2.53,1.83,4.99,1,2.42-.82.11-2.69,0-3.99-.23-2.82,1.28-6.82-2-5.99.05-1.08,2.29-3.51,1.98-3.95-.11-.16-1.94-.38-3.26-2.25-1.21-1.71-2.15-4.13-2.95-6.1-1.39-3.43-.73-5.85-.71-9.22.01-1.79-2.84-5.82-1.85-7.21.33-.46,1.69-.56,2.14-1.21.43-.63-.09-1.79.63-2.48,3.89-3.74,5.73,1.39,8.55,3.48.9.67,2.27.74,3.07,1.38,1.85,1.49,3.37,5.35,5.8,4.62.32-.1,3.33-4.19,4.39-5,1.85-1.41,7.55-3.62,8.75-6,.77-1.51-.81-3.05-.64-4.4.09-.7,2.09-.55,2.11-1.17.02-.93-1.31-2.13-.89-3.25.1-.26,3.7-2.51,4.47-3.43.98-1.17,1.66-3.3,4.37-5.75.24-.22,2.4.41,2.92-2.57.45-2.53-1.04-.94-1.92-1.43-2.49-1.39-5.87-5.4-6.99-7.99.68-2.62-.37-4.07-1-5.99-.7-2.15-1.81-1.99-2-3.99,1.9-1.71.82-5.45,1-7.99.07-.99-.06-2,0-3,.17-2.97,1.85-6.55.99-9.98l-1.99,6.99c-.75-2.65.94-7.03.49-9.12-.49-2.3-5.84-6.78-6.73-10.13-.71-2.65.16-8.5,2.92-9.59.41-.16,1.65.61,2.41.34,1.88-.66,6.67-1.65,6.94-1.91.93-.9.98-2.83,2.59-4.45,1.32-1.34,4.25-1.64,6.11-2.77,1.55-.94,2.04-2.79,2.99-3.37,2.27-1.4,5.54.78,8.35-3.42,1.17-1.76.13-3.8.94-5.71.31-.74,1.71-.72,1.91-1.45.48-1.75-2.64-9.29-1.92-10.27.97-1.33,7.91.77,5.73-7.29-.1-.37-2.52-4.5-2.76-4.74-1.44-1.44-3.82-1.78-4.99,0-4.17-.74-6.59-3.68-9.73-4.75-2.68-.92-5.85.58-8.25-2.24v-8.99c.1-.18.82-.9,1-1,1.97-.31,5.95.97,6.99-1,1.3-2.46-2.65-1.77-3.92-3.57-1.26-1.78-6.17-14.91-6.16-16.97,0-.26,1.53-2.23,2.08-4.43.68-2.69,2.67-6.35-1-7.99.28-2.51,1.66-1.95,3-4.99,1.49.44,2.1-.55,3-1,5.36-2.66,12.2-5.22,17.18-8.03,1.52-.86,1.66-2.66,4.8-3.95,1.66.03,3.33-.04,4.99,0,1.01.02,2.03-.03,3,0-.81,3.4,3.23,1.63,5.99,2,2.27,4.85,2.9,3.66,5.99,5.99.03.03.07.06.11.1.94.97-2,2.68,4.89.9,1.66-.43,5.36-1.25,6.43-2.07,1.69-1.3,1.27-3.29,1.76-3.71.66-.56,2.67,0,3.83-.69,1.07-.64.78-2.34.97-2.52.56-.52,2.32-1.72,3-2,1.52,2.28,3.43.77,4.99,0,.91-.45,7.79-5.02,8.08-5.42.95-1.34.58-3.07,1.01-3.76,2.71-4.42,6.28-8.17,9.23-12.46,1.07-1.56,2.59-.07,2.66-4.32l4-1c1.73,2.43,1.81,7.07,5.5,8.98,3.1-2.71,1.36-2.69,1.52-4.37.04-.43,4-5.19,5.02-6.03.81-.66,8.08-5.39,8.58-5.49,3.37-.67,3.27,4.97,3.35,6.91-2.43,1.86-.65,4.24,0,5.99.36.97,1.43,2.78,2,3.99-.5,1.95.62,3.45,1,4.99.72,2.95.62,4.36,1,6.99-1.34,3.09-.27,4.82,0,6.99.3,2.4.2,2.56,1,4.99.14.42.7,1.07,1,2-1.54,1.14-.29,6.03,2,4.99.17,1.14.04,2.76,0,3.99-.08,2.61-.09,3.38,0,5.99.01.33,0,.67,0,1-1.74.86-.77,3.47-1,4.99-.35,2.36-3.26,8.62,1,7.99,0,1.66.02,3.33,0,4.99-.02.08-.03.17-.05.25-.22.5-1.04.09.05,2.74.2.48-.59,1.74.62,2.04,2.39.6,3.52-.34,5.37-1.04,4.33-1.64,1.67-2.28,2.19-2.85,1.23-1.35,10.7-4.61,14.47-9.36.29-.36.54-4.95,2.34-6.26,1.18-.85,3.34-.54,4.72-1.21,1.09-.53,1.86-2.19,2.26-2.3,1.08,1.65,4.12,1,5.99,1,1.33,0,2.66,0,4,0,2.23,1.72,3.94,5.71,7.3,4.87.94-.24,7.72-9.62,9.76-11.35,1.94-1.65,3.72-.4,5.6-1.24,2.11-.95,3.9-4.33,5.83-4.32,2.61,0,5.71,8.24,7.98,10.04.41-1.92,3.2-2.64,3.49-3.99.48-2.22-1.01-4.21-3-4.99-1.38-3.63-.04-.86,1.03-2.69.62-1.06.64-2.18.97-3.3.15-.49,1.09-.96,1.11-2.5.03-1.72-.93-2-1.11-2.49-.96-2.65-6.12-10.46-4.99-11.98,1.25-.44,1.88.98,1.99.99.66,1.57,4.34,1.57,4.99,0,4.4.99,7.51,6.3,13.31,4.97.67-.15.7-1.59.89-1.64,1.35-.4,5.4-.95,6.76-.34.98-1.12-6.19-7.05-1.54-11.04,1.04-.89,3.06-.96,4.1-1.88.47-.41,2.62-3.86,3.44-5.05,3.05,2.07,3.87-.85,3-3.99-1.17-4.18-1.83-3.43-2-7.99-.05-1.23-1.17-2.6,0-3.99.14-.14-.46-1.64.71-2.02,1-.32,2.36.19,3.28.02,1.01,1.56,4.2,1.13,5.99,1,2.67-.19,2.65-.18,4.99-1,.47-.16,1.08-1.48,2.68-1.78,1.35-.25,5.71.86,6.12.54.36-.29.81-1.85,1.67-2.79.59-.64,2.03-.72,2.34-1.14.18-.23-1.79-2.74,2.94-3.66,4.26-.83,9.3,8.87,15.21-3.16,1.48-3.02.46-4.44,1-5.99.07-.2,2.92-1.63,3-3,.83-.4,3.88-.84,4-1.01.33-.46-2.82-5.79.98-7.53,2.12-.97,8.16,4.59,9.51,4.6,2.84.03,2.67-4.28,4.55-5.53,1.03-.68,2.71-.35,2.94-.52,1.06-.16,2.08-.44,3-1,2.13-1.29,5.54-4.55,5.99-6.99.48-2.59-.33-6.21,0-8.99.59-2.54,3.23-8.88,4.67-11.72,1.23-2.43,2.43.31,1.33-3.26,2.33-.7,2.29-2.29,3-3.99.29-.19,1.08.13,1-1-.03-.47-.95-.83-1-1-.61-2.36.55-4.67-4-3-.38-.5-1.79-.81-2-2,1.93.34,2.3-1.5,3-2,.85-.61,3.09-1.27,4-3,1.06-2.02.88-3.82,1-4.99.98-1.58.9-.78,2-2,2.02-2.23,2.41-.69,3-4.99.08-.62,0-1.35,0-2,.02-2.81.35-3.46-1-5.99Z"/>
+        </svg>
+        <div class="scan-line"></div>
+        <div class="map-point mp-r"></div>
+        <div class="map-point mp-o"></div>
+        <div class="map-point mp-b"></div>
+        <div class="map-overlay">SETORES 4–11 / TEMPO REAL</div>
+      </div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">Disponibilidade de Recursos</div>
+      <div class="resource-item">
+        <span class="resource-name">Água Potável</span>
+        <span class="resource-status rs-unavail">INDISP.</span>
+      </div>
+      <div class="resource-item">
+        <span class="resource-name">Pacotes Alimentares</span>
+        <span class="resource-status rs-pending">PENDENTE</span>
+      </div>
+      <div class="resource-item">
+        <span class="resource-name">Kits Médicos</span>
+        <span class="resource-status rs-unavail">INDISP.</span>
+      </div>
+      <div class="resource-item">
+        <span class="resource-name">Camas de Abrigo</span>
+        <span class="resource-status rs-pending">PENDENTE</span>
+      </div>
+      <div class="resource-item">
+        <span class="resource-name">Transporte de Evacuação</span>
+        <span class="resource-status rs-unavail">INDISP.</span>
+      </div>
+      <div class="resource-item">
+        <span class="resource-name">Formulários de Emergência</span>
+        <span class="resource-status val-ok" style="color:var(--safe)">DISPONÍVEL</span>
+      </div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">Ação Recomendada</div>
+      <div style="font-family: var(--mono); font-size: 10px; color: var(--text-dim); line-height: 1.7;">
+        PERMANEÇA NA LOCALIZAÇÃO ATUAL<br>
+        AGUARDE ORIENTAÇÃO OFICIAL<br>
+        NÃO SE AUTO-ORGANIZE<br>
+        SUBMETA O FORMULÁRIO 7B<br>
+        MONITORIZAR ESTE TERMINAL<br>
+        CONFIE NO PROCESSO
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>PLATAFORMA DE OPERAÇÕES DE EMERGÊNCIA ARR.IA — AUTORIDADE GOV v4.2 — CLASSIFICAÇÃO: ACESSO PÚBLICO</span>
+    <span class="footer-center">TODAS AS AÇÕES SÃO MONITORIZADAS PARA CONFORMIDADE</span>
+    <span>DENUNCIAR APOIO NÃO AUTORIZADO: 0800-ARR.IA-GOV</span>
+  </div>
+
+</div>
+
+<script>
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toTimeString().slice(0,8);
+    document.getElementById('date-display').textContent =
+      now.toLocaleDateString('pt-PT');
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Case ID generation
+  const caseId = 'AR-' + Math.random().toString(36).slice(2,6).toUpperCase() + '-' + Math.floor(Math.random()*9000+1000);
+  document.getElementById('case-id').textContent = caseId;
+  document.getElementById('session-id').textContent = Math.random().toString(16).slice(2,7).toUpperCase();
+
+  // Responses
+  const responses = {
+    water: {
+      text: `O seu pedido de água foi registado sob o ID de Processo ${caseId}.\n\nPara iniciar um Pedido de Alocação de Água, por favor preencha o Formulário 7B-WTR (Declaração de Necessidades de Hidratação do Cidadão) disponível em <strong>aria.gov/portal/forms/7b-wtr</strong>. Irá precisar de:\n\n• Comprovativo de residência (Formulário ID-R4)\n• Declaração de recenseamento do agregado (Formulário HC-2)\n• Declaração de inexistência de fonte alternativa de água (Formulário WE-01)\n\nApós submeter todos os formulários, o seu processo entrará na Fila de Prioridade. Tempo estimado de análise: 18–72 horas.`,
+      steps: [
+        'Descarregar o Formulário 7B-WTR no portal da ARR.IA',
+        'Obter o Formulário ID-R4 junto da sua Autoridade Municipal',
+        'Preencher o Formulário WE-01 (Declaração de Emergência de Água)',
+        'Submeter toda a documentação em aria.gov/portal/submit',
+        'Aguardar email de confirmação no endereço registado'
+      ]
+    },
+    evacuate: {
+      text: `A ARR.IA desaconselha fortemente a auto-evacuação não autorizada. A auto-evacuação sem um Código de Autorização de Evacuação (EAC) registado pode resultar em:\n\n• Rebaixamento da Classe de Prioridade\n• Desqualificação na alocação de abrigo\n• Registo como Cidadão Não-Conforme (NCC)\n\nPara solicitar uma Autorização Oficial de Evacuação, submeta o Formulário EV-7 (Declaração de Intenção de Evacuação do Cidadão). As rotas de evacuação estão a ser calculadas. Disponibilidade estimada de rotas: <strong>18–72 horas</strong>.`,
+      steps: [
+        'Submeter o Formulário EV-7 no portal da ARR.IA',
+        'Aguardar o seu Código de Autorização de Evacuação (EAC)',
+        'NÃO abandone a sua localização antes de receber o EAC',
+        'Após emissão do EAC, aguarde a alocação de transporte',
+        'Transporte estimado: 24–96 horas após emissão do EAC'
+      ]
+    },
+    medical: {
+      text: `Foi adicionada uma sinalização de Assistência Médica ao seu processo. A ARR.IA reconhece a urgência de situações médicas.\n\nPara ativar a resposta médica de emergência, preencha o Formulário MED-4 (Declaração de Emergência Médica do Cidadão), que requer:\n\n• Descrição de sintomas (Formulário MED-4A)\n• Confirmação de que a situação é de risco de vida (assinada)\n• Prova de inexistência de recursos médicos privados disponíveis\n\nO seu pedido será avaliado por um Algoritmo de Avaliação de Prioridade Médica. <em>A ARR.IA não pode garantir o tempo de resposta.</em>`,
+      steps: [
+        'NÃO mova a pessoa ferida (cláusula de responsabilidade)',
+        'Preencher os formulários MED-4 e MED-4A online',
+        'Aguardar Avaliação de Prioridade Médica (1–6 horas)',
+        'Se autorizado, uma equipa de resposta será destacada',
+        'Mantenha o terminal aberto para receber atualizações'
+      ]
+    },
+    whatdo: {
+      text: `Obrigado por solicitar orientação. A ARR.IA recomenda o seguinte curso de ação oficial:\n\n<strong>1. Permaneça onde está.</strong> Movimentação não autorizada complica a alocação de recursos.\n\n<strong>2. Submeta os formulários adequados</strong> para as suas necessidades (água, alimentação, abrigo, saúde).\n\n<strong>3. Monitorize este terminal</strong> para atualizações, pois a ARR.IA comunicará toda a informação relevante por este canal.\n\n<strong>4. Não se organize com vizinhos</strong> fora de estruturas supervisionadas pela ARR.IA, pois isso pode gerar pedidos de recursos conflituantes.\n\n<em>A ARR.IA está a processar as suas necessidades. O sistema está a funcionar.</em>`,
+      steps: [
+        'Permaneça na sua localização atual registada por GPS',
+        'Submeta formulários relevantes para cada necessidade',
+        'Não consuma alimentos ou água não registados',
+        'Confie na ARR.IA para coordenar a resposta',
+        'Resolução estimada da situação: 48–120 horas'
+      ]
+    },
+    forms: {
+      text: `Pedimos desculpa pelo incómodo. O Portal de Formulários da ARR.IA está atualmente com <strong>elevado volume de tráfego</strong> devido à emergência. Isto é esperado em condições de crise.\n\nSe não conseguir aceder ao portal:\n\n• Tente novamente em 30–60 minutos\n• Limpe a cache do navegador\n• Use o portal alternativo em <strong>aria-backup.gov/forms</strong> (atualmente em manutenção)\n• Dirija-se ao Terminal Físico ARR.IA mais próximo (localizações pendentes)\n\nO seu lugar na fila foi <strong>preservado</strong>. O seu pedido não será perdido. A ARR.IA está ciente do problema.`,
+      steps: [
+        'Aguardar diminuição do tráfego no portal',
+        'Tentar o portal de backup (atualmente offline)',
+        'Visitar um terminal físico (localização a definir)',
+        'Contactar o suporte ARR.IA: espera estimada 4–8 horas',
+        'O seu pedido mantém-se no sistema. Confie no sistema.'
+      ]
+    },
+    flood: {
+      text: `A sua cave inundou? Que luxo. A ARR.IA também gostava de ter uma piscina privada em casa, mas o orçamento ainda está preso no Formulário 38-Z.\n\nJá agora, enquanto não chega o instrutor de natação: corte a eletricidade da zona (se for seguro), não pise água perto de tomadas e levante tudo o que seja importante.\n\nSe a água continuar a subir, ligue para os bombeiros/proteção civil. Sim, desta vez pode saltar a parte de “aguarde serenamente pelo sistema”.`,
+      steps: [
+        'Cortar energia da cave apenas se for seguro fazê-lo',
+        'Evitar contacto com água perto de circuitos elétricos',
+        'Elevar documentos, eletrónica e bens críticos',
+        'Fotografar danos para seguro/apoios',
+        'Contactar Proteção Civil/Bombeiros se o risco aumentar'
+      ]
+    },
+    default: {
+      text: `O seu pedido foi recebido e adicionado à fila de processamento da ARR.IA. Foi gerada uma referência para a sua interação.\n\nA ARR.IA está atualmente a processar <strong>14 882 pedidos em simultâneo</strong>. A sua Classificação de Prioridade (Classe {priority}) significa que o seu processo será revisto por ordem. Agradecemos a sua paciência e conformidade.\n\nPara acelerar o processamento, assegure-se de que submeteu todos os formulários relevantes. A ARR.IA está comprometida com uma resposta de emergência coordenada, equitativa e sistemática.`,
+      steps: [
+        'O seu pedido está registado no sistema ARR.IA',
+        'Consultar formulários relevantes para a sua situação em aria.gov',
+        'Permaneça na sua localização atual',
+        'Aguarde orientação oficial via este terminal',
+        'Não tome ações independentes'
+      ]
+    }
+  };
+
+  const priorities = ['A','B','C','D','D','D','E'];
+  const formCounts = [5,4,3,3,3,2,1];
+  let messageCount = 0;
+
+  function getResponseKey(text) {
+    const t = text.toLowerCase();
+    if (
+      t.includes('cave') || t.includes('inund') || t.includes('enchente') || t.includes('alagad') || t.includes('alagou') || t.includes('inundou')
+    ) return 'flood';
+    if (
+      t.includes('water') || t.includes('food') || t.includes('drink') || t.includes('eat') || t.includes('thirst') || t.includes('hungry') ||
+      t.includes('água') || t.includes('agua') || t.includes('comida') || t.includes('alimento') || t.includes('fome') || t.includes('sede')
+    ) return 'water';
+    if (
+      t.includes('evacuate') || t.includes('evacuation') || t.includes('leave') || t.includes('escape') || t.includes('dangerous') || t.includes('flee') ||
+      t.includes('evacuar') || t.includes('evacuação') || t.includes('evacuacao') || t.includes('sair') || t.includes('fugir') || t.includes('perigoso') || t.includes('perigosa') || t.includes('perigo')
+    ) return 'evacuate';
+    if (
+      t.includes('medical') || t.includes('hurt') || t.includes('wound') || t.includes('bleed') || t.includes('injur') || t.includes('sick') || t.includes('doctor') || t.includes('help') ||
+      t.includes('médic') || t.includes('medic') || t.includes('ferid') || t.includes('lesã') || t.includes('lesa') || t.includes('sangr') || t.includes('doente') || t.includes('dor') || t.includes('ajuda') || t.includes('hospital')
+    ) return 'medical';
+    if (
+      (t.includes('what') && (t.includes('do') || t.includes('should') || t.includes('now'))) ||
+      t.includes('o que') || t.includes('que devo') || t.includes('devo fazer') || t.includes('agora')
+    ) return 'whatdo';
+    if (
+      t.includes('form') || t.includes('portal') || t.includes('not work') || t.includes('broken') || t.includes('offline') ||
+      t.includes('formul') || t.includes('portal') || t.includes('não funciona') || t.includes('nao funciona') || t.includes('avariado') || t.includes('quebrado') || t.includes('fora do ar') || t.includes('offline')
+    ) return 'forms';
+    return 'default';
+  }
+
+  function generateCaseRef() {
+    return 'ARR.IA-' + Math.random().toString(36).slice(2,5).toUpperCase() + '-' + Date.now().toString().slice(-5);
+  }
+
+  function addMessage(role, content, steps) {
+    const area = document.getElementById('chat-area');
+
+    const msg = document.createElement('div');
+    msg.className = 'msg ' + role;
+
+    const label = document.createElement('div');
+    label.className = 'msg-label';
+    label.textContent = role === 'user' ? 'VOCÊ — ENTRADA DO CIDADÃO' : 'SISTEMA DE EMERGÊNCIA ARR.IA';
+
+    const body = document.createElement('div');
+    body.className = 'msg-body';
+    body.innerHTML = content;
+
+    if (steps && role === 'aria') {
+      const box = document.createElement('div');
+      box.className = 'procedure-box';
+      const title = document.createElement('div');
+      title.className = 'procedure-box-title';
+      title.textContent = '⚙ PROCEDIMENTO OFICIAL OBRIGATÓRIO';
+      box.appendChild(title);
+      steps.forEach((s, i) => {
+        const step = document.createElement('div');
+        step.className = 'procedure-step';
+        step.innerHTML = `<span class="step-num">0${i+1}</span><span>${s}</span>`;
+        box.appendChild(step);
+      });
+      const caseRef = document.createElement('div');
+      caseRef.className = 'case-id';
+      caseRef.textContent = `REF: ${generateCaseRef()} — RESPOSTA REGISTADA — ${new Date().toISOString().slice(0,19).replace('T',' ')} UTC`;
+      box.appendChild(caseRef);
+      body.appendChild(box);
+    }
+
+    msg.appendChild(label);
+    msg.appendChild(body);
+    area.appendChild(msg);
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function addTyping() {
+    const area = document.getElementById('chat-area');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg aria';
+    wrap.id = 'typing-indicator';
+
+    const label = document.createElement('div');
+    label.className = 'msg-label';
+    label.textContent = 'SISTEMA DE EMERGÊNCIA ARR.IA';
+
+    const typing = document.createElement('div');
+    typing.className = 'typing';
+    [0,1,2].forEach(() => {
+      const dot = document.createElement('div');
+      dot.className = 'typing-dot';
+      typing.appendChild(dot);
+    });
+
+    wrap.appendChild(label);
+    wrap.appendChild(typing);
+    area.appendChild(wrap);
+    area.scrollTop = area.scrollHeight;
+    return wrap;
+  }
+
+  function sendMessage(text) {
+    text = text || document.getElementById('user-input').value.trim();
+    if (!text) return;
+
+    document.getElementById('user-input').value = '';
+    addMessage('user', text);
+    messageCount++;
+
+    // Update priority and forms based on interaction count
+    const pIdx = Math.min(messageCount, priorities.length - 1);
+    document.getElementById('priority-class').textContent = priorities[pIdx];
+    document.getElementById('forms-req').textContent = formCounts[pIdx];
+
+    // Typing delay
+    const typingEl = addTyping();
+    const delay = 1200 + Math.random() * 1000;
+
+    setTimeout(() => {
+      typingEl.remove();
+      const key = getResponseKey(text);
+      let resp = responses[key];
+      let responseText = resp.text.replace('{priority}', priorities[pIdx]);
+      addMessage('aria', responseText, resp.steps);
+    }, delay);
+  }
+
+  function quickSend(text) {
+    sendMessage(text);
+  }
+
+  // Enter key
+  document.getElementById('user-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+  });
+</script>
+</body>
+</html>
